@@ -210,6 +210,30 @@ python -m docq --help
 docq --help
 ```
 
+
+### Speed tips (when Ollama feels slow)
+
+Local LLMs on CPU can be slow for the first token (10-60s+). `docq` retrieval is instant.
+
+In the interactive REPL use these **zero-wait** or fast commands:
+
+- `/gist your question here` — instantly returns the full relevant document text(s) with no LLM call at all. Perfect for gists/summaries.
+- `/model qwen3.5:2b` (or any model from `ollama list`) — switch to a smaller/faster model live.
+- `/sources your question` — see what docs would be used.
+
+From shell:
+```powershell
+python -m docq search "your question"     # always fast
+```
+
+Set a fast default model permanently:
+```powershell
+$env:DOCQA_LLM_MODEL="qwen3.5:2b"
+docq
+```
+
+You have several small models (`qwen2.5-coder:1.5b-base` is tiny and very fast).
+
 ## License
 
 MIT. Build cool things with your private data.

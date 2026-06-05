@@ -136,7 +136,7 @@ def ask(
     else:
         # Clear "how long do I wait?" feedback for the common case of slow first token
         status = console.status(
-            "[dim]Waiting for LLM response (first token can take 10-90s if the model is loading)...[/dim]"
+            "[dim]Waiting for LLM... (slow? try a smaller model with $env:DOCQA_LLM_MODEL or use python -m docq search)[/dim]"
         )
         status.start()
         got_token = False
@@ -204,7 +204,8 @@ def search(
 
 def _interactive(cfg: DocQConfig, idx: Indexer, watcher: Optional[FolderWatcher] = None):
     _print_header(cfg, idx.stats())
-    rprint("[dim]Type questions. Commands: /index, /reindex, /list, /stats, /sources <q>, /config, /help, /quit[/dim]\n")
+    rprint("[dim]Type questions. Commands: /index /reindex /list /stats /sources <q> /model <name> /gist <q> /config /help /quit[/dim]")
+    rprint("[dim]Tip for speed: /model qwen3.5:2b   or   /gist your question   (instant, no LLM)[/dim]\n")
 
     llm = LLMClient(cfg)
 
@@ -267,8 +268,26 @@ def _interactive(cfg: DocQConfig, idx: Indexer, watcher: Optional[FolderWatcher]
                         rprint(f"• {s['source']} score={s['score']:.3f}")
             elif cmd == "/config":
                 rprint(cfg)
+            elif cmd.startswith("/model "):
+                new_model = cmd[len("/model "):].strip()
+                if new_model:
+                    cfg.llm_model = new_model
+                    llm = LLMClient(cfg)
+                    rprint(f"[green]Switched LLM to: {new_model}[/green]")
+                    if not llm.is_available():
+                        rprint("[yellow]Warning: Could not reach this model right now.[/yellow]")
+            elif cmd.startswith("/gist "):
+                subq = cmd[len("/gist "):].strip()
+                if subq:
+                    context, srcs = idx.get_full_context(subq, max_docs=5)
+                    rprint(f"[bold]Fast gist (full relevant context, no LLM):[/bold]\n")
+                    for s in srcs:
+                        rprint(f"• {s['source']}")
+                    console.print("\n" + context[:15000] + ("\n... (truncated)" if len(context) > 15000 else ""))
             elif cmd in {"/h", "/help", "/?"}:
-                rprint("Commands: /index /reindex /list /stats /sources <q> /config /quit")
+                rprint("Commands: /index /reindex /list /stats /sources <q> /model <name> /gist <q> /config /quit")
+                rprint("[dim]/model qwen3.5:2b   → switch to a faster/smaller model[/dim]")
+                rprint("[dim]/gist foo bar       → instant full context (no LLM wait)[/dim]")
             else:
                 rprint("[red]Unknown command.[/red] Try /help")
             continue
@@ -287,12 +306,13 @@ def _interactive(cfg: DocQConfig, idx: Indexer, watcher: Optional[FolderWatcher]
             # Show a clear waiting indicator. First token from local LLM can easily
             # take 10-90 seconds the first time (model loading into RAM, CPU inference, etc.).
             status = console.status(
-                "[dim]Waiting for LLM response (first token can take 10-90s if the model is loading)...[/dim]"
+                "[dim]Waiting for LLM... (slow? try /model qwen3.5:2b or /gist for instant)[/dim]"
             )
             status.start()
             got_token = False
             try:
-                for tok in llm.stream_answer(q, context):
+                # Use smaller max_tokens in interactive for faster responses
+                for tok in llm.stream_answer(q, context, max_tokens=600):
                     if not got_token:
                         status.stop()
                         got_token = True

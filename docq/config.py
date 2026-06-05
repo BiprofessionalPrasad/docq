@@ -51,7 +51,7 @@ MAX_CONTEXT_CHARS = 24000  # plenty for "full context" on relevant docs; LLM con
 MAX_DOCS_IN_CONTEXT = 6  # top relevant full docs to stuff (prevents prompt blowup)
 
 # LLM defaults (user overrides via env or CLI)
-DEFAULT_LLM_MODEL = "llama3.2:3b"  # fast on CPU via ollama etc. Change to 1b for ultra fast.
+DEFAULT_LLM_MODEL = "qwen3.5:2b"  # Good balance. For max speed use "qwen3.5:2b" or "qwen2.5-coder:1.5b-base" (much faster on CPU).
 DEFAULT_BASE_URL = "http://localhost:11434/v1"  # Ollama OpenAI compat
 DEFAULT_API_KEY = "ollama"  # dummy for most local servers
 
