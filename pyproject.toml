@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docq"
+version = "0.1.0"
+description = "Fast local document Q&A. Drop docs in a folder, ask questions, get fast grounded answers with full relevant context."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "docq"}]
+dependencies = [
+  "typer[all]>=0.12.3",
+  "rich>=13.7",
+  "watchdog>=5.0",
+  "openai>=1.54",
+  "pypdf>=5.1",
+  "python-docx>=1.1.2",
+  "python-pptx>=1.0.0",
+  "openpyxl>=3.1.5",
+  "chromadb>=0.5.23",
+]
+
+[project.scripts]
+docq = "docq.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["docq*"]
+
+[tool.setuptools.package-data]
+docq = ["*.md"]
+
+[project.urls]
+Homepage = "https://github.com/example/docq"
